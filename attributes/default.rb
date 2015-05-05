@@ -7,20 +7,17 @@ Chef::Log.debug "Loaded settings: #{settings.inspect}"
 #
 node.default[:elasticsearch] ||= {}
 node.normal[:elasticsearch]  ||= {}
-
-include_attribute 'elasticsearch::customize'
-
 node.normal[:elasticsearch]    = DeepMerge.merge(node.default[:elasticsearch].to_hash, node.normal[:elasticsearch].to_hash)
 node.normal[:elasticsearch]    = DeepMerge.merge(node.normal[:elasticsearch].to_hash, settings.to_hash)
 
 
 # === VERSION AND LOCATION
 #
-default.elasticsearch[:version]       = "0.90.12"
+default.elasticsearch[:version]       = "0.90.5"
 default.elasticsearch[:host]          = "http://download.elasticsearch.org"
 default.elasticsearch[:repository]    = "elasticsearch/elasticsearch"
-default.elasticsearch[:filename]      = nil
-default.elasticsearch[:download_url]  = nil
+default.elasticsearch[:filename]      = "elasticsearch-#{node.elasticsearch[:version]}.tar.gz"
+default.elasticsearch[:download_url]  = [node.elasticsearch[:host], node.elasticsearch[:repository], node.elasticsearch[:filename]].join('/')
 
 # === NAMING
 #
@@ -30,21 +27,14 @@ default.elasticsearch[:node][:name]    = node.name
 # === USER & PATHS
 #
 default.elasticsearch[:dir]       = "/usr/local"
-default.elasticsearch[:bindir]    = "/usr/local/bin"
 default.elasticsearch[:user]      = "elasticsearch"
-default.elasticsearch[:uid]       = nil
-default.elasticsearch[:gid]       = nil
 
 default.elasticsearch[:path][:conf] = "/usr/local/etc/elasticsearch"
 default.elasticsearch[:path][:data] = "/usr/local/var/data/elasticsearch"
 default.elasticsearch[:path][:logs] = "/usr/local/var/log/elasticsearch"
 
-default.elasticsearch[:pid_path]  = "/usr/local/var/run"
+default.elasticsearch[:pid_path]  = "/usr/local/var/run/elasticsearch"
 default.elasticsearch[:pid_file]  = "#{node.elasticsearch[:pid_path]}/#{node.elasticsearch[:node][:name].to_s.gsub(/\W/, '_')}.pid"
-
-default.elasticsearch[:templates][:elasticsearch_env] = "elasticsearch-env.sh.erb"
-default.elasticsearch[:templates][:elasticsearch_yml] = "elasticsearch.yml.erb"
-default.elasticsearch[:templates][:logging_yml]       = "logging.yml.erb"
 
 # === MEMORY
 #
@@ -69,7 +59,7 @@ CONFIG
 # By default, the `mlockall` is set to true: on weak machines and Vagrant boxes,
 # you may want to disable it.
 #
-default.elasticsearch[:bootstrap][:mlockall] = ( node.memory.total.to_i >= 1048576 ? true : false )
+default.elasticsearch[:bootstrap][:mlockall] = true
 default.elasticsearch[:limits][:memlock] = 'unlimited'
 default.elasticsearch[:limits][:nofile]  = '64000'
 
@@ -92,7 +82,6 @@ default.elasticsearch[:env_options] = ""
 # === OTHER SETTINGS
 #
 default.elasticsearch[:skip_restart] = false
-default.elasticsearch[:skip_start] = false
 
 # === PORT
 #
